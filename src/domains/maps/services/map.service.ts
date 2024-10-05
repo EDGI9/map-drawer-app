@@ -4,8 +4,6 @@ import { MapDriverPort } from '../ports/driver/map-driver.ports';
 export default function MapService(reader: MapDriverPort): MapDriverPort {
     async function getById(id: string): Promise<MapDTO | null> {
         const entity = await reader.getById(id);
-        console.log("entity", entity);
-        
 
         if (!entity) {
             return null

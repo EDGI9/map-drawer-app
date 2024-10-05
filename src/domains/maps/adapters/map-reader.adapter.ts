@@ -8,8 +8,6 @@ export function MapReaderAdapter(): MapDrivenPort {
     myHeaders.append("Content-Type", "application/json");
 
     async function getById(id: string): Promise<MapEntity | null> {
-        console.log(id);
-        
         try {
             /* If API existed  */
            /*  const response = await fetch(MapApiPaths.getById.replace('{id}',id),  {
