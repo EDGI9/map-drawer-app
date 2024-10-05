@@ -1,4 +1,4 @@
-export interface MapDTO {
+export interface MapEntity {
     id: string,
     src: string
 }
