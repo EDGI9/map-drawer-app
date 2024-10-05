@@ -6,7 +6,7 @@ A small application that allows users to draw shapes in a map image. The idea is
 - Organization
 - Application architecture and design
 - Data and control flow
-- Hability to draw/edit/delete shapes
+- Ability to draw/edit/delete shapes
 - Focus only on Front-end for now
 
 ## Steps
@@ -55,7 +55,7 @@ A small application that allows users to draw shapes in a map image. The idea is
             <li>[ ] CI/CD for tests</li>
             <li>[ ] Retreive Images (Images service)</li>
             <li>[ ] Retreive and Send Shapes data (Shapes service)</li>
-            <li>[ ] Hability to draw shapes</li>
+            <li>[ ] Ability to draw shapes</li>
           </ul>
         </td>
     </tr>
@@ -81,6 +81,28 @@ A small application that allows users to draw shapes in a map image. The idea is
 <br>
 
 ## Project Setup
+
+### Docker Desktop
 ```
-WIP
+In order to avoid issues with versioning, it's best to run this application with Docker to set up the enviornment.
+```
+
+### Install dependencies
+```
+npm run i 
+```
+
+### Compiles and hot-reloads for development
+```
+npm run dev
+```
+
+### Compiles and minifies for production
+```
+npm run build
+```
+
+### Lint files
+```
+npm run lint
 ```
