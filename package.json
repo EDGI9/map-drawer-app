@@ -1,0 +1,11 @@
+{
+  "name": "map-drawer-app",
+  "version": "1.0.0",
+  "description": "A small application that allows users to draw shapes in a map image. The idea is to simulate the highlighting of areas in the image.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
