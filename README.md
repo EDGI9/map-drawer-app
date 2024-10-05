@@ -17,9 +17,9 @@ A small application that allows users to draw shapes in a map image. The idea is
           <ul>
             <li>[x] Create Repository</li>
             <li>
-              [ ] Create Project Board in repository
+              [x] Create Project Board in repository
               <ul>
-                <li>[ ] Create tickets with requirements </li>
+                <li>[x] Create tickets with requirements </li>
               </ul>
             </li>            
             <li>
@@ -37,11 +37,11 @@ A small application that allows users to draw shapes in a map image. The idea is
         <td>Step 2 - Base Project Setup</td>
         <td>
           <ul>
-            <li>[ ] Docker</li>
-            <li>[ ] Dev Container</li>
-            <li>[ ] Vite</li>
-            <li>[ ] React</li>
-            <li>[ ] Vitest / testing-library</li>
+            <li>[x] Docker</li>
+            <li>[x] Dev Container</li>
+            <li>[x] Vite</li>
+            <li>[x] React</li>
+            <li>[x] Vitest / testing-library</li>
           </ul>
         </td>
     </tr>
