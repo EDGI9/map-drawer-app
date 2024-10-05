@@ -9,7 +9,7 @@ export default defineConfig({
       exclude: [
         ...configDefaults.exclude,
         './eslint.config.js',
-        './vite.config.js',
+        './vite.config.ts',
         './vitest.config.js',
       ],
     },
