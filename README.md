@@ -102,6 +102,16 @@ npm run dev
 npm run build
 ```
 
+### Run tests
+```
+npm run test
+```
+
+### Run test coverage
+```
+npm run test:cov
+```
+
 ### Lint files
 ```
 npm run lint
