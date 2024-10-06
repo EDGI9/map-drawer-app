@@ -8,8 +8,6 @@ export default function ShapesService(reader:ShapesDrivenReaderPort, writer: Sha
 
    async function getById(id:string): Promise<ShapeEntity[] | null> {
         const entities = await reader.getById(id);
-        console.log("entities", entities);
-        
 
         if (!entities) {
             return null
