@@ -28,23 +28,26 @@ export default function ShapeReaderAdapter(): ShapesDrivenReaderPort {
             return response.json(); */
 
 
-            //TODO: Add logic to fetch data from local storage and if none is found then fetch mock data
 
-           
-            /* Simulate response from back-end */
-           const response = await new Promise((resolve) => {
-                setTimeout(() => {
-                    resolve({
-                        //@ts-ignore
-                        ok: true, 
-                        status: 200,
-                        json: () => Promise.resolve(ShapeList)
-                    });
-                }, 300);
-            });
-            //@ts-ignore
-            return response.json()
+            /* Simulate response from back-end by local storage or promise*/
 
+            try {
+                const value = localStorage.getItem(id);
+                return JSON.parse(value);
+            } catch (error) {
+               const response = await new Promise((resolve) => {
+                    setTimeout(() => {
+                        resolve({
+                            //@ts-ignore
+                            ok: true, 
+                            status: 200,
+                            json: () => Promise.resolve(ShapeList)
+                        });
+                    }, 300);
+                });
+                //@ts-ignore
+                return response.json()
+            }
             
         } catch (error) {
             console.log(error)

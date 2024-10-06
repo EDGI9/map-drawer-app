@@ -26,8 +26,9 @@ export default function ShapeWriterAdapter(): ShapesDrivenWriterPort {
 
             return response.json(); */
 
-
-            //TODO: Add logic to save data in local storage to simlulate back-end
+            const stringValue = JSON.stringify(dto);
+              
+            localStorage.setItem(id, stringValue);
             
         } catch (error) {
             console.log(error, id, dto)
