@@ -3,6 +3,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { MapList }  from "../../maps/__mocks__/maps";
 import { ShapeList }  from "../__mocks__/shapes";
 import { ShapeDTO } from '../core/dtos/shape.dto';
+import ShapesService from '../index';
 
 describe('Shapes service', () => {
     it('Can get shapes data', async () => {

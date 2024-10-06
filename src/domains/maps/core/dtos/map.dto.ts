@@ -1,4 +1,4 @@
 export interface MapDTO {
-    id: string,
-    src: string
+    id: string;
+    src: string;
 }
