@@ -30,12 +30,12 @@ export default function ShapeReaderAdapter(): ShapesDrivenReaderPort {
 
 
             /* Simulate response from back-end by local storage or promise*/
+            const value = localStorage.getItem(id);
 
-            try {
-                const value = localStorage.getItem(id);
+            if (value) {
                 return JSON.parse(value);
-            } catch (error) {
-               const response = await new Promise((resolve) => {
+            } else {
+                const response = await new Promise((resolve) => {
                     setTimeout(() => {
                         resolve({
                             //@ts-ignore
@@ -48,7 +48,6 @@ export default function ShapeReaderAdapter(): ShapesDrivenReaderPort {
                 //@ts-ignore
                 return response.json()
             }
-            
         } catch (error) {
             console.log(error)
             return null
