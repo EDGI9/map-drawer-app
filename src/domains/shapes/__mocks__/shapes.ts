@@ -1,6 +1,6 @@
-import {shapeDTO} from '../core/dtos/shape.dto'
+import { ShapeDTO } from '../core/dtos/shape.dto'
 
-export const shapeList: shapeDTO[] = [
+export const ShapeList: ShapeDTO[] = [
     {
         angle:70,
         backgroundColor:"",
