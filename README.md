@@ -49,12 +49,12 @@ A small application that allows users to draw shapes in a map image. The idea is
         <td>Step 3 - Implementation</td>
         <td>
           <ul>
-            <li>[ ] Determine object models (Mock Data)</li>
-            <li>[ ] Unit Tests (Image service)</li>
-            <li>[ ] Unit Tests (Shapes service)</li>
-            <li>[ ] CI/CD for tests</li>
-            <li>[ ] Retreive Images (Images service)</li>
-            <li>[ ] Retreive and Send Shapes data (Shapes service)</li>
+            <li>[x] Determine object models (Mock Data)</li>
+            <li>[x] Unit Tests (Image service)</li>
+            <li>[x] Unit Tests (Shapes service)</li>
+            <li>[x] CI/CD for tests</li>
+            <li>[x] Retreive Images (Images service)</li>
+            <li>[x] Retreive and Send Shapes data (Shapes service)</li>
             <li>[ ] Ability to draw shapes</li>
           </ul>
         </td>
@@ -70,6 +70,13 @@ A small application that allows users to draw shapes in a map image. The idea is
   - Faster project setup (I.e Onboarding)
   - To ensure consistent functioning across different machines
   - Stable development environment
+- Object Model (Mock Data)
+    - Object model was determined based on [Fabric.js](http://fabricjs.com/) library as it was chosen as the library to handle the functionality with shapes.
+- Shapes Service
+    - Initialy it was tought of creating individual methods to Create/Update/Delete shapes and automatically send that individual Shape information to Back-end.
+      This was changed by now sending the whole list of Shapes based on Map Id which will determine what shapes are configured by map. So now we recive and send a list of shapes based on Map Id which simplifies for now the functionality.
+- Back-end simulation
+    - To simulate a back-end we will work with the browsers localstorage for the Shapes Service. Initialy if no data is found from localstorage we then simulate a promise that returns the avaiable Mock data. 
  
 ## Ideas for future enhancements
 - Convert to a full-stack MERN application that communicates with a Back-end Server and Database
