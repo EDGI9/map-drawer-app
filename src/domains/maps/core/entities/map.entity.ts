@@ -1,4 +1,4 @@
 export interface MapEntity {
-    id: string,
-    src: string
+    id: string;
+    src: string;
 }

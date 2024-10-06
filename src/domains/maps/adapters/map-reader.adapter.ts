@@ -1,14 +1,18 @@
 import { MapList } from "../__mocks__/maps";
 // import { MapApiPaths } from "../core/constants/api-paths";
 import { MapEntity } from "../core/entities/map.entity";
-import { MapDrivenPort } from "../ports/driven/map-driven-reader.ports";
+import { MapDrivenReaderPort } from "../ports/driven/map-driven-reader.ports";
 
-export function MapReaderAdapter(): MapDrivenPort {
-    const myHeaders = new Headers();
-    myHeaders.append("Content-Type", "application/json");
+export function MapReaderAdapter(): MapDrivenReaderPort {
+    /* const myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json"); */
 
     async function getById(id: string): Promise<MapEntity | null> {
         try {
+            if (!id) {
+                throw new Error("No Id provided");
+            }
+
             /* If API existed  */
            /*  const response = await fetch(MapApiPaths.getById.replace('{id}',id),  {
                 method: "GET",
@@ -21,9 +25,6 @@ export function MapReaderAdapter(): MapDrivenPort {
 
             return response.json(); */
 
-            if (!id) {
-                throw new Error("No Id provided");
-            }
             /* Simulate response from back-end */
            const response = await new Promise((resolve) => {
                 setTimeout(() => {
