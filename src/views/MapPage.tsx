@@ -21,13 +21,21 @@ function MapPage() {
         
         editor.addRectangle();
     };
+    async function update() {
+        
+        if (!map || !editor) {
+            console.log('Invalid paramater for update');
+            return  
+        }
+        await ShapesService.update(map.id, editor.canvas._objects)
+    }
 
     function setCanvasProperties() {
         if (!editor || !fabric) {
             return;
         }
-        editor.canvas.setHeight(1000);
-        editor.canvas.setWidth(1000);
+        editor.canvas.setHeight(900);
+        editor.canvas.setWidth(900);
         editor.canvas.renderAll();
     }
 
@@ -86,9 +94,10 @@ function MapPage() {
     }, [shapesList]);
 
     useEffect(() => {
-        setCanvasProperties();
         loadMap();
     }, []);
+
+    setCanvasProperties();
 
     
     return(
@@ -97,6 +106,7 @@ function MapPage() {
             <div>
                 <button onClick={() => onAddRectangle()}>Add Rect</button>
                 <button>Add Polygon</button>
+                <button onClick={() => update()}>Save</button>
             </div>
             <div className='c-drawing-container'>
                 <FabricJSCanvas className="c-canvas" onReady={onReady} />
