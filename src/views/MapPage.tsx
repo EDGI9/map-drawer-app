@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { fabric } from "fabric";
 import { FabricJSCanvas, useFabricJSEditor } from "fabricjs-react";
 import MapService from "../domains/maps/index";
@@ -10,7 +10,8 @@ import { MapDTO } from '../domains/maps/core/dtos/map.dto';
 
 function MapPage() {
     let [map, setMap] = useState<MapDTO>();
-    let [shapesList, setShapesList] = useState<ShapeDTO[]>();
+    let [shapesList, setShapesList] = useState<ShapeDTO[]>([]);
+    let history = [];
     const { editor, onReady } = useFabricJSEditor();
 
 
@@ -21,6 +22,41 @@ function MapPage() {
         
         editor.addRectangle();
     };
+
+    const undo = () => {
+        if (!editor || !fabric) {
+            return;
+        }
+
+        if (editor.canvas._objects.length > 0) {
+            history.push(editor.canvas._objects.pop());
+        }
+        editor.canvas.renderAll();
+    };
+
+    const redo = () => {
+        if (!editor || !fabric) {
+            return;
+        }
+
+        if (history.length > 0) {
+          editor.canvas.add(history.pop());
+        }
+    };
+
+    const clear = () => {
+        if (!editor || !fabric) {
+            return;
+        }
+        editor.canvas._objects.splice(0, editor.canvas._objects.length);
+        history.splice(0, history.length);
+        editor.canvas.renderAll();
+    };
+
+    const deleteSelectedObject = () => {
+        editor.canvas.remove(editor.canvas.getActiveObject());
+    };
+
     async function update() {
         
         if (!map || !editor) {
@@ -91,7 +127,7 @@ function MapPage() {
                  editor.canvas.add(path)
             }
         })
-    }, [shapesList]);
+    }, [shapesList?.length]);
 
     useEffect(() => {
         loadMap();
@@ -106,6 +142,11 @@ function MapPage() {
             <div>
                 <button onClick={() => onAddRectangle()}>Add Rect</button>
                 <button>Add Polygon</button>
+                <button onClick={() => undo()}>Undo</button>
+                <button onClick={() => redo()}>Redo</button>
+                <button onClick={() => clear()}>Clear</button>
+                <button onClick={() => deleteSelectedObject()}>Delete</button>
+
                 <button onClick={() => update()}>Save</button>
             </div>
             <div className='c-drawing-container'>
