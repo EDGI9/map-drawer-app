@@ -1,6 +1,14 @@
-import { useEffect, useState } from 'react'
-import { fabric } from "fabric";
-import { FabricJSCanvas, useFabricJSEditor } from "fabricjs-react";
+import { useEffect, useRef, useState } from 'react'
+
+import GeoTIFF from 'ol/source/GeoTIFF';
+import Map from 'ol/Map.js';
+import TileLayer from 'ol/layer/WebGLTile.js';
+import Draw, { createBox, createRegularPolygon } from 'ol/interaction/Draw.js';
+import Polygon from 'ol/geom/Polygon.js';
+import View from 'ol/View.js';
+import { Vector as VectorSource} from 'ol/source.js';
+import { Vector as VectorLayer} from 'ol/layer.js';
+
 import MapService from "../domains/maps/index";
 import { MapList } from "../domains/maps/__mocks__/maps";
 import ShapesService from "../domains/shapes";
@@ -9,154 +17,89 @@ import { MapDTO } from '../domains/maps/core/dtos/map.dto';
 
 
 function MapPage() {
-    let [map, setMap] = useState<MapDTO>();
-    let [shapesList, setShapesList] = useState<ShapeDTO[]>([]);
-    let history = [];
-    const { editor, onReady } = useFabricJSEditor();
+    let [geoTiffSource, setGeoTiffSource] = useState();
+    let [geoTiffLayer, setGeoTiffLayer] = useState();
+    let [draw, setDraw] = useState();
+    let mapRef = useRef({});
 
+    const source = new VectorSource({wrapX: false});
+    const vector = new VectorLayer({
+        source: source,
+    });
 
-    const onAddRectangle = () => {
-        if (!editor || !fabric) {
-            return;
-        }
-        
-        editor.addRectangle();
-    };
-
-    const undo = () => {
-        if (!editor || !fabric) {
-            return;
+    async function loadGeoTiff() {
+        const mapData = await MapService.getById(MapList[0].id);
+        if (!mapData) {
+            console.log('No Map data');
+            return
         }
 
-        if (editor.canvas._objects.length > 0) {
-            history.push(editor.canvas._objects.pop());
-        }
-        editor.canvas.renderAll();
-    };
+        const source = new GeoTIFF({
+            sources: [
+                {
+                    url: mapData.src,
+                },
+            ],
+        });
 
-    const redo = () => {
-        if (!editor || !fabric) {
-            return;
-        }
-
-        if (history.length > 0) {
-          editor.canvas.add(history.pop());
-        }
-    };
-
-    const clear = () => {
-        if (!editor || !fabric) {
-            return;
-        }
-        editor.canvas._objects.splice(0, editor.canvas._objects.length);
-        history.splice(0, history.length);
-        editor.canvas.renderAll();
-    };
-
-    const deleteSelectedObject = () => {
-        editor.canvas.remove(editor.canvas.getActiveObject());
-    };
-
-    async function update() {
-        
-        if (!map || !editor) {
-            console.log('Invalid paramater for update');
-            return  
-        }
-        await ShapesService.update(map.id, editor.canvas._objects)
-    }
-
-    function setCanvasProperties() {
-        if (!editor || !fabric) {
-            return;
-        }
-        editor.canvas.setHeight(900);
-        editor.canvas.setWidth(900);
-        editor.canvas.renderAll();
+        setGeoTiffSource(source)
     }
 
     async function loadMap() {
-        const resultMap = await MapService.getById(MapList[0].id);
-        
-        if (!resultMap) {
-            console.log('Map not found');
-            return  
+        if (!geoTiffSource) {
+            console.log('No Geo Tiff source');
+           return
         }
-        setMap(resultMap)
+
+        const tileLayer = new TileLayer({
+            source: geoTiffSource,
+        });
+
+
+        setGeoTiffLayer(tileLayer)
+
+        const mapObject = new Map({
+            target: 'map-area',
+            layers: [
+                tileLayer,
+                vector
+            ],
+            view: geoTiffSource.getView(),
+        });
+
+        mapRef.current = mapObject;
     }
 
-    async function loadShapes() {
-        if (!map) {
-            console.log('No Map data');
-            return  
-        }
-        const resultsShapes = await ShapesService.getById(map.id)
 
-        if (!resultsShapes) {
-            console.log('Shapes not found');
-            return  
-        }
+    function addRectangle() {
 
-        setShapesList(resultsShapes)
+        let geometryFunction = createRegularPolygon(4);
+        let drawData = new Draw({
+            source: source,
+            //source: geoTiffSource,
+            type: 'Circle',
+            geometryFunction: geometryFunction,
+        });
+        setDraw(drawData)
+        mapRef.current.addInteraction(drawData);
     }
 
-
     useEffect(() => {
-        loadShapes(); 
-    }, [map]);
-
-    useEffect(() => {
-        if (!shapesList) {
-            return   
-        }
-
-        if (!editor || !fabric) {
-            return;
-        }
-        shapesList.forEach((shape) => {
-            if (shape.type == "rect") {
-                const rect = new fabric.Rect(shape);
-            
-                editor.canvas.add(rect)
-            }
-
-            if (shape.type == "path") {
-                const path = new fabric.Path(shape.path);
-                path.set(shape)
-            
-                 editor.canvas.add(path)
-            }
-        })
-    }, [shapesList?.length]);
+        loadGeoTiff();
+    }, []);
 
     useEffect(() => {
         loadMap();
-    }, []);
+    }, [geoTiffSource]);
 
-    setCanvasProperties();
-
-    
     return(
         <div>
             <h1>Map area</h1>
             <div>
-                <button onClick={() => onAddRectangle()}>Add Rect</button>
-                <button>Add Polygon</button>
-                <button onClick={() => undo()}>Undo</button>
-                <button onClick={() => redo()}>Redo</button>
-                <button onClick={() => clear()}>Clear</button>
-                <button onClick={() => deleteSelectedObject()}>Delete</button>
-
-                <button onClick={() => update()}>Save</button>
+                <button onClick={() => addRectangle()}>Add rectangle</button>
             </div>
-            <div className='c-drawing-container'>
-                <FabricJSCanvas className="c-canvas" onReady={onReady} />
-                {map ? (
-                    <img src={map.src} height={400} width={400} className='c-image'/>
-                    ) : (
-                    <p>Loading...</p>
-                    )
-                }
+            <div ref={mapRef} id="map-area" className='c-drawing-container' style={{ width: '100%', height: '400px' }}>
+
             </div>
         </div>
     )
