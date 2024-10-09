@@ -6,6 +6,10 @@ import TileLayer from 'ol/layer/WebGLTile.js';
 import Draw, { createRegularPolygon } from 'ol/interaction/Draw.js';
 import { Vector as VectorSource} from 'ol/source.js';
 import { Vector as VectorLayer} from 'ol/layer.js';
+import {Style, Stroke, Fill} from 'ol/style';
+import { Polygon } from 'ol/geom'; 
+import Feature from 'ol/Feature';  
+import { fromLonLat  } from 'ol/proj'; 
 import 'ol/ol.css';
 
 import MapService from "../domains/maps/index";
@@ -24,12 +28,49 @@ function MapPage() {
         POLYGON: 'Polygon'
     };
 
-    const vectorSource = new VectorSource({wrapX: false});
 
-    const vector = new VectorLayer({
+    const rectangleCoordinates = [
+        [
+            [5.07, 16.35],   
+            [5.1, 16.35],    
+            [5.1, 16.32],   
+            [5.07, 16.32],  
+            [5.07, 16.32], 
+        ],
+    ];
+    
+
+    const transformedCoords = rectangleCoordinates[0].map(coord =>
+        fromLonLat(coord)
+    );
+
+    const rectangleGeometry = new Polygon([transformedCoords]);
+
+    const rectangleFeature = new Feature({
+        geometry: rectangleGeometry,
+    });
+
+    const vectorSource = new VectorSource({
+        features: [rectangleFeature],
+    });
+
+    const rectangleStyle = new Style({
+        stroke: new Stroke({
+          color: 'blue',
+          width: 2,
+        }),
+        fill: new Fill({
+          color: 'rgba(0, 0, 255, 0.1)',
+        }),
+    });
+
+    rectangleFeature.setStyle(rectangleStyle);
+
+    const vectorLayer = new VectorLayer({
         source: vectorSource,
     });
-    
+
+
 
     async function loadGeoTiff() {
         const mapData = await MapService.getById(MapList[0].id);
@@ -49,22 +90,21 @@ function MapPage() {
         setGeoTiffSource(source)
     }
 
-    function loadMap() {
+    async function loadMap() {
         if (!geoTiffSource) {
             console.log('No Geo Tiff source');
            return
         }
-        
 
         const tileLayer = new TileLayer({
             source: geoTiffSource,
         });
 
         const mapObject = new Map({
-            target: 'map-area',
+            target: 'map',
             layers: [
                 tileLayer,
-                vector
+                vectorLayer
             ],
             view: geoTiffSource.getView(),
         });
@@ -92,7 +132,7 @@ function MapPage() {
             type: shapes.POLYGON
         });
         setDraw(drawData)
-        mapRef.current.addInteraction(drawData);
+        mapRef.current.addInteraction(drawData);  
     }
 
     useEffect(() => {
@@ -110,7 +150,7 @@ function MapPage() {
                 <button onClick={() => addSquare()}>Add rectangle</button>
                 <button onClick={() => addPolygon()}>Add Polygon</button>
             </div>
-            <div ref={mapRef} id="map-area" className='c-drawing-container' style={{ width: '100%', height: '400px' }}>
+            <div ref={mapRef} id="map" className='c-drawing-container' style={{ width: '100%', height: '700px' }}>
 
             </div>
         </div>
