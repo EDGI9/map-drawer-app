@@ -3,13 +3,13 @@ import { useEffect, useRef, useState } from 'react'
 import GeoTIFF from 'ol/source/GeoTIFF';
 import Map from 'ol/Map.js';
 import TileLayer from 'ol/layer/WebGLTile.js';
+import Feature from 'ol/Feature';  
 import Draw, { createRegularPolygon } from 'ol/interaction/Draw.js';
 import { Vector as VectorSource} from 'ol/source.js';
 import { Vector as VectorLayer} from 'ol/layer.js';
 import {Style, Stroke, Fill} from 'ol/style';
 import { Polygon } from 'ol/geom'; 
-import Feature from 'ol/Feature';  
-import { fromLonLat  } from 'ol/proj'; 
+import { fromLonLat, transform } from 'ol/proj'; 
 import 'ol/ol.css';
 
 import MapService from "../domains/maps/index";
@@ -23,6 +23,7 @@ function MapPage() {
     let [geoTiffSource, setGeoTiffSource] = useState();
     let [draw, setDraw] = useState();
     let [shapes, setShapes] = useState<ShapeDTO[]>([]);
+    let [vectorSource, setVectorSource] = useState([]);
     let mapRef = useRef({});
     const shapesTypes = {
         SQUARE: 'Circle', //Circle is the value to set for square in OpenLibrary
@@ -116,30 +117,62 @@ function MapPage() {
             });
 
             mapRef.current.addLayer(vectorLayer);
+            setVectorSource(vectorSource)
         });
     }
 
    
     function addSquare() {
         mapRef.current.removeInteraction(draw);
+
         let geometryFunction = createRegularPolygon(4);
         let drawData = new Draw({
             source: vectorSource,
             type: shapesTypes.SQUARE,
             geometryFunction: geometryFunction
         });
-        setDraw(drawData)
+
+        setDraw(drawData);
         mapRef.current.addInteraction(drawData);
+
+        drawData.on("drawend", (e) => {
+            saveShape(e);
+        })
+    }
+
+    function saveShape(event) {
+        const feature = event.feature;  
+        const geometry = feature.getGeometry();  
+        
+        const coordinates = geometry.getCoordinates();
+        
+        const geographicCoords = coordinates[0].map((coord) =>
+            transform(coord, 'EPSG:3857', 'EPSG:4326')
+        );
+        
+        let updatedShapeList = shapes.push(geographicCoords);
+        setShapes(updatedShapeList);
+        update();
+    }
+
+    function update() {
+        ShapesService.update(MapList[0].id, shapes) 
     }
 
     function addPolygon() {
         mapRef.current.removeInteraction(draw);
+
         let drawData = new Draw({
             source: vectorSource,
             type: shapesTypes.POLYGON
         });
-        setDraw(drawData)
+
+        setDraw(drawData);
         mapRef.current.addInteraction(drawData);  
+
+        drawData.on("drawend", (e) => {
+            saveShape(e);
+        })
     }
 
     useEffect(() => {
