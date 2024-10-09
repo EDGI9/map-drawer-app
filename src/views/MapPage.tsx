@@ -13,6 +13,7 @@ import { Polygon } from 'ol/geom';
 import { fromLonLat, transform } from 'ol/proj'; 
 import 'ol/ol.css';
 
+import MapComponent from "../components/Map";
 import MapService from "../domains/maps/index";
 import ShapesService from "../domains/shapes";
 import { MapList } from "../domains/maps/__mocks__/maps";
@@ -20,15 +21,8 @@ import { ShapeDTO } from '../domains/shapes/core/dtos/shape.dto';
 import { MapDTO } from '../domains/maps/core/dtos/map.dto';
 
 function MapPage() {
-    let [geoTiffSource, setGeoTiffSource] = useState();
-    let [draw, setDraw] = useState();
     let [shapes, setShapes] = useState<ShapeDTO[]>([]);
-    let [vectorSource, setVectorSource] = useState([]);
-    let mapRef = useRef({});
-    const shapesTypes = {
-        SQUARE: 'Circle', //Circle is the value to set for square in OpenLibrary
-        POLYGON: 'Polygon'
-    };
+    let [map, setMap] = useState({});
 
     async function getShapes() {
         const shapesData = await ShapesService.getById(MapList[0].id);
@@ -55,125 +49,11 @@ function MapPage() {
             ],
         });
 
-        setGeoTiffSource(source)
+        setMap(source)
     }
 
-    async function loadMap() {
-        if (!geoTiffSource) {
-            console.log('No Geo Tiff source');
-           return
-        }
-
-        const tileLayer = new TileLayer({
-            source: geoTiffSource,
-        });
-
-        const mapObject = new Map({
-            target: 'map',
-            layers: [
-                tileLayer,
-            ],
-            view: geoTiffSource.getView(),
-        });
-
-        mapRef.current = mapObject;
-    }
-
-    function loadShapes() {
-        if (!shapes.length) {
-            console.log('No Shape data to load');
-            return
-        };
-
-        shapes.forEach((shape) => {
-            const transformedCoords = shape.map(coord =>
-                fromLonLat(coord)
-            );
-
-            const rectangleGeometry = new Polygon([transformedCoords]);
-    
-            const rectangleFeature = new Feature({
-                geometry: rectangleGeometry,
-            });
-        
-            const vectorSource = new VectorSource({
-                features: [rectangleFeature],
-            });
-        
-            const rectangleStyle = new Style({
-                stroke: new Stroke({
-                    color: 'blue',
-                    width: 2,
-                }),
-                fill: new Fill({
-                color: 'rgba(0, 0, 255, 0.1)',
-                }),
-            });
-        
-            rectangleFeature.setStyle(rectangleStyle);
-        
-            const vectorLayer = new VectorLayer({
-                source: vectorSource,
-            });
-
-            
-            mapRef.current.addLayer(vectorLayer);
-
-            const modify = new Modify({source: vectorSource});
-            mapRef.current.addInteraction(modify);
-
-            setVectorSource(vectorSource);
-
-            modify.on("modifyend", (event) => {
-                const data = {
-                    feature: event.features.array_[0]
-                }
-                saveShape(data);
-            })
-        });
-    }
-
-    function saveShape(event) {
-        const feature = event.feature;  
-        const geometry = feature.getGeometry();  
-        
-        const coordinates = geometry.getCoordinates();
-        
-        const geographicCoords = coordinates[0].map((coord) =>
-            transform(coord, 'EPSG:3857', 'EPSG:4326')
-        );
-        
-        let updatedShapeList = [...shapes, geographicCoords];
-        setShapes(updatedShapeList);
-    }
-
-
-    function addShape(type:string) {
-        let geometryFunction = createRegularPolygon(4);
-
-        let drawOptions= {
-            source: vectorSource,
-            type: type
-        };
-
-        switch (type) {
-            case shapesTypes.SQUARE:
-                drawOptions = {...drawOptions, geometryFunction: geometryFunction }
-                break;
-            default:
-                break;
-        }
-        let drawData = new Draw(drawOptions);
-        const snap = new Snap({source: vectorSource});
-
-        setDraw(drawData);
-        mapRef.current.addInteraction(snap);
-        mapRef.current.addInteraction(drawData);  
-
-        drawData.on("drawend", (e) => {
-            saveShape(e);
-            mapRef.current.removeInteraction(drawData);
-        })
+    function updateShapes(params:type) {
+        ShapesService.update(MapList[0].id, params) 
     }
 
     useEffect(() => {
@@ -181,28 +61,10 @@ function MapPage() {
         getShapes();
     }, []);
 
-    useEffect(() => {
-        loadMap();
-        loadShapes();
-    }, [geoTiffSource]);
-
-    useEffect(() => {
-        if (!shapes.length) {
-            return
-        }
-        ShapesService.update(MapList[0].id, shapes) 
-    }, [shapes]);
-
     return(
         <div>
             <h1>Map area</h1>
-            <div>
-                <button onClick={() => addShape(shapesTypes.SQUARE)}>Add rectangle</button>
-                <button onClick={() => addShape(shapesTypes.POLYGON)}>Add Polygon</button>
-            </div>
-            <div ref={mapRef} id="map" className='c-drawing-container' style={{ width: '100%', height: '700px' }}>
-
-            </div>
+            <MapComponent shapes={shapes} mapSource={map} onUpdate={updateShapes}/>
         </div>
     )
 };
