@@ -13,8 +13,8 @@ import { fromLonLat  } from 'ol/proj';
 import 'ol/ol.css';
 
 import MapService from "../domains/maps/index";
-import { MapList } from "../domains/maps/__mocks__/maps";
 import ShapesService from "../domains/shapes";
+import { MapList } from "../domains/maps/__mocks__/maps";
 import { ShapeDTO } from '../domains/shapes/core/dtos/shape.dto';
 import { MapDTO } from '../domains/maps/core/dtos/map.dto';
 
@@ -22,58 +22,25 @@ import { MapDTO } from '../domains/maps/core/dtos/map.dto';
 function MapPage() {
     let [geoTiffSource, setGeoTiffSource] = useState();
     let [draw, setDraw] = useState();
+    let [shapes, setShapes] = useState<ShapeDTO[]>([]);
     let mapRef = useRef({});
-    const shapes = {
+    const shapesTypes = {
         SQUARE: 'Circle', //Circle is the value to set for square in OpenLibrary
         POLYGON: 'Polygon'
     };
 
+    async function getShapes() {
+        const shapesData = await ShapesService.getById(MapList[0].id);
+        if (!shapesData) {
+            console.log('No Shape data found');
+            return
+        };
 
-    const rectangleCoordinates = [
-        [
-            [5.07, 16.35],   
-            [5.1, 16.35],    
-            [5.1, 16.32],   
-            [5.07, 16.32],  
-            [5.07, 16.32], 
-        ],
-    ];
-    
+        setShapes(shapesData);
+    }
 
-    const transformedCoords = rectangleCoordinates[0].map(coord =>
-        fromLonLat(coord)
-    );
-
-    const rectangleGeometry = new Polygon([transformedCoords]);
-
-    const rectangleFeature = new Feature({
-        geometry: rectangleGeometry,
-    });
-
-    const vectorSource = new VectorSource({
-        features: [rectangleFeature],
-    });
-
-    const rectangleStyle = new Style({
-        stroke: new Stroke({
-          color: 'blue',
-          width: 2,
-        }),
-        fill: new Fill({
-          color: 'rgba(0, 0, 255, 0.1)',
-        }),
-    });
-
-    rectangleFeature.setStyle(rectangleStyle);
-
-    const vectorLayer = new VectorLayer({
-        source: vectorSource,
-    });
-
-
-
-    async function loadGeoTiff() {
-        const mapData = await MapService.getById(MapList[0].id);
+    async function getGeoTiff() {
+        const mapData: MapDTO | null = await MapService.getById(MapList[0].id) ;
         if (!mapData) {
             console.log('No Map data');
             return
@@ -104,12 +71,52 @@ function MapPage() {
             target: 'map',
             layers: [
                 tileLayer,
-                vectorLayer
             ],
             view: geoTiffSource.getView(),
         });
 
         mapRef.current = mapObject;
+    }
+
+    function loadShapes() {
+        if (!shapes.length) {
+            console.log('No Shape data to load');
+            return
+        };
+
+        shapes.forEach((shape) => {
+            const transformedCoords = shape.map(coord =>
+                fromLonLat(coord)
+            );
+
+            const rectangleGeometry = new Polygon([transformedCoords]);
+    
+            const rectangleFeature = new Feature({
+                geometry: rectangleGeometry,
+            });
+        
+            const vectorSource = new VectorSource({
+                features: [rectangleFeature],
+            });
+        
+            const rectangleStyle = new Style({
+                stroke: new Stroke({
+                    color: 'blue',
+                    width: 2,
+                }),
+                fill: new Fill({
+                color: 'rgba(0, 0, 255, 0.1)',
+                }),
+            });
+        
+            rectangleFeature.setStyle(rectangleStyle);
+        
+            const vectorLayer = new VectorLayer({
+                source: vectorSource,
+            });
+
+            mapRef.current.addLayer(vectorLayer);
+        });
     }
 
    
@@ -118,7 +125,7 @@ function MapPage() {
         let geometryFunction = createRegularPolygon(4);
         let drawData = new Draw({
             source: vectorSource,
-            type: shapes.SQUARE,
+            type: shapesTypes.SQUARE,
             geometryFunction: geometryFunction
         });
         setDraw(drawData)
@@ -129,18 +136,20 @@ function MapPage() {
         mapRef.current.removeInteraction(draw);
         let drawData = new Draw({
             source: vectorSource,
-            type: shapes.POLYGON
+            type: shapesTypes.POLYGON
         });
         setDraw(drawData)
         mapRef.current.addInteraction(drawData);  
     }
 
     useEffect(() => {
-        loadGeoTiff();
+        getGeoTiff();
+        getShapes();
     }, []);
 
     useEffect(() => {
         loadMap();
+        loadShapes();
     }, [geoTiffSource]);
 
     return(
