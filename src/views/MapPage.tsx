@@ -1,17 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 
 import GeoTIFF from 'ol/source/GeoTIFF';
-import Map from 'ol/Map.js';
-import TileLayer from 'ol/layer/WebGLTile.js';
-import Feature from 'ol/Feature';  
-import { Draw, Snap, Modify} from 'ol/interaction';
-import { createRegularPolygon } from 'ol/interaction/Draw.js';
-import { Vector as VectorSource} from 'ol/source.js';
-import { Vector as VectorLayer} from 'ol/layer.js';
-import {Style, Stroke, Fill} from 'ol/style';
-import { Polygon } from 'ol/geom'; 
-import { fromLonLat, transform } from 'ol/proj'; 
-import 'ol/ol.css';
+import GeoJSON from 'ol/format/GeoJSON';
 
 import MapComponent from "../components/Map";
 import MapService from "../domains/maps/index";
@@ -31,7 +21,8 @@ function MapPage() {
             return
         };
 
-        setShapes(shapesData);
+        const transformedShapesData = shapesData.map(item => new GeoJSON().readFeature(item));
+        setShapes(transformedShapesData);
     }
 
     async function getGeoTiff() {
@@ -52,8 +43,9 @@ function MapPage() {
         setMap(source)
     }
 
-    function updateShapes(params:type) {
-        ShapesService.update(MapList[0].id, params) 
+    function updateShapes(featureList:type) {
+        const featureGeoJSON = featureList.map(item => new GeoJSON().writeFeature(item))
+        ShapesService.update(MapList[0].id, featureGeoJSON) 
     }
 
     useEffect(() => {

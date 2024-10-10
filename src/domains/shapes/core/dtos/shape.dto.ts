@@ -1,1 +1,1 @@
-export type ShapeDTO = number[][];
+export type ShapeDTO = string[];

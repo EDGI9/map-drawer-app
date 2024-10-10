@@ -21,11 +21,7 @@ describe('Shapes service', () => {
             expect(result).toBe(null)
         } else {
             expect(result).toEqual(
-                expect.arrayContaining(<ShapeDTO[]>[
-                    expect.arrayContaining(<ShapeDTO>[
-                        expect.arrayContaining([expect.any(Number), expect.any(Number)]),
-                    ]),
-                ])
+                expect.arrayContaining(<ShapeDTO[]>[ expect.any(String)])
             )
         }
 

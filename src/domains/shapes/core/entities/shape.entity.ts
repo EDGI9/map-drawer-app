@@ -1,1 +1,1 @@
-export type ShapeEntity = number[][];
+export type ShapeEntity = string[];

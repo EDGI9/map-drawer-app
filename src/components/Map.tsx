@@ -2,19 +2,17 @@ import { useEffect, useRef, useState } from 'react'
 
 import olMap from 'ol/Map.js';
 import TileLayer from 'ol/layer/WebGLTile.js';
-import Feature from 'ol/Feature';  
-import { Draw, Snap, Modify} from 'ol/interaction';
+import { Draw, Snap, Modify, Select} from 'ol/interaction';
 import { createRegularPolygon } from 'ol/interaction/Draw.js';
 import { Vector as VectorSource} from 'ol/source.js';
 import { Vector as VectorLayer} from 'ol/layer.js';
 import {Style, Stroke, Fill} from 'ol/style';
-import { Polygon } from 'ol/geom'; 
-import { fromLonLat, transform } from 'ol/proj'; 
 import 'ol/ol.css';
 
 export default function Map(props) {
-    let [draw, setDraw] = useState();
-    let [vectorSource, setVectorSource] = useState([]);
+    let [vectorSource, setVectorSource] = useState();
+    let [selectedShape, setSelectedShape] = useState(null);
+    let [shapes, setShapes] = useState([]);
     let mapRef = useRef({});
     const shapesTypes = {
         SQUARE: 'Circle', //Circle is the value to set for square in OpenLibrary
@@ -40,31 +38,11 @@ export default function Map(props) {
         });
 
         mapRef.current = mapObject;
+        loadShapes();
     }
 
     function loadShapes() {
-        if (!props.shapes.length) {
-            console.log('No Shape data to load');
-            return
-        };
-        
-        props.shapes.forEach((shape) => {
-            const transformedCoords = shape.map(coord =>
-                fromLonLat(coord)
-            );
-            
-            const rectangleGeometry = new Polygon([transformedCoords]);
-            
-            const rectangleFeature = new Feature({
-                geometry: rectangleGeometry,
-            });
-            
-            const vectorSource = new VectorSource({
-                features: [rectangleFeature],
-            });
-            
-            
-
+        const shapeFeatures = props.shapes.map((item) => {
             const rectangleStyle = new Style({
                 stroke: new Stroke({
                     color: 'blue',
@@ -75,47 +53,39 @@ export default function Map(props) {
                 }),
             });
         
-            rectangleFeature.setStyle(rectangleStyle);
-        
-            const vectorLayer = new VectorLayer({
-                source: vectorSource,
-            });
-
-            
-            mapRef.current.addLayer(vectorLayer);
-
-            const modify = new Modify({source: vectorSource});
-
-            mapRef.current.addInteraction(modify);
-
-            setVectorSource(vectorSource);
-
-            modify.on("modifyend", (event) => {
-                const data = {
-                    feature: event.features.array_[0]
-                }
-                saveShape(data);
-            });
+            item.setStyle(rectangleStyle)
+            return item
         });
+
+        setShapes(shapeFeatures)
+        
+        const innerVectorSource = new VectorSource({
+            features: shapeFeatures,
+        });
+        
+        const vectorLayer = new VectorLayer({
+            source: innerVectorSource,
+        });
+
+        setVectorSource(innerVectorSource);
+        mapRef.current.addLayer(vectorLayer);
     }
 
-    function saveShape(event) {
-        const feature = event.feature;  
-        const geometry = feature.getGeometry();  
+    function saveShape(feature) {
+        const filteredShapeList = shapes.filter(item => item.ol_uid !== feature.ol_uid);
+        setShapes(filteredShapeList)
         
-        const coordinates = geometry.getCoordinates();
-        
-        const geographicCoords = coordinates[0].map((coord) =>
-            transform(coord, 'EPSG:3857', 'EPSG:4326')
-        );
-        
-        let updatedShapeList = [...props.shapes, geographicCoords];
-
-        props.onUpdate(updatedShapeList)
+        filteredShapeList.push(feature);
+        props.onUpdate(filteredShapeList)
     }
 
 
     function addShape(type:string) {
+        console.log(mapRef.current, vectorSource);
+        if (!mapRef.current) {
+            return  
+        }
+
         let geometryFunction = createRegularPolygon(4);
 
         let drawOptions= {
@@ -133,29 +103,65 @@ export default function Map(props) {
         let drawData = new Draw(drawOptions);
         const snap = new Snap({source: vectorSource});
 
-        setDraw(drawData);
-        mapRef.current.addInteraction(snap);
         mapRef.current.addInteraction(drawData);  
+        mapRef.current.addInteraction(snap);
 
-        drawData.on("drawend", (e) => {
-            saveShape(e);
+        drawData.on("drawend", (event) => {
+            console.log(event.feature);
+            
+            saveShape(event.feature);
             mapRef.current.removeInteraction(drawData);
         })
     }
 
+    function addModifiers() {
+        const modify = new Modify({source: vectorSource});
+        const select = new Select();
+        
+        mapRef.current.addInteraction(modify);
+        mapRef.current.addInteraction(select);
+
+        modify.on("modifyend", async (event) => {
+            const feature = await event.features.getArray()[0];
+            saveShape(feature);
+        });
+
+        select.on('select', (event) => {
+            const features = event.selected;
+            if (features.length > 0) {
+                setSelectedShape(features[0])
+            } else {
+                setSelectedShape(null)
+            }
+        });
+    }
+
+    function removeShape() {
+        if (selectedShape) {
+            vectorSource.removeFeature(selectedShape);
+            setSelectedShape(null)
+        }
+    }
+
     useEffect(() => {
         loadMap();
-        loadShapes();
     }, [props.mapSource]);
+
+    useEffect(() => {
+        if (!vectorSource) {
+            return
+        }
+        addModifiers();
+    }, [vectorSource]);
+
     return (
         <>
             <div>
                 <button onClick={() => addShape(shapesTypes.SQUARE)}>Add rectangle</button>
                 <button onClick={() => addShape(shapesTypes.POLYGON)}>Add Polygon</button>
+                <button onClick={() => removeShape()}>Delete selected shape</button>
             </div>
-            <div ref={mapRef} id="map" className='c-drawing-container' style={{ width: '100%', height: '700px' }}>
-
-            </div>   
+            <div ref={mapRef} id="map" className='c-drawing-container' style={{ width: '100%', height: '700px' }}></div>   
         </>
     )
 }
