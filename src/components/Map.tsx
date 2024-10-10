@@ -71,17 +71,13 @@ export default function Map(props) {
         mapRef.current.addLayer(vectorLayer);
     }
 
-    function saveShape(feature) {
-        const filteredShapeList = shapes.filter(item => item.ol_uid !== feature.ol_uid);
-        setShapes(filteredShapeList)
-        
-        filteredShapeList.push(feature);
-        props.onUpdate(filteredShapeList)
+    function saveShape(features: []) {
+        setShapes(features)
+        props.onUpdate(features)
     }
 
 
     function addShape(type:string) {
-        console.log(mapRef.current, vectorSource);
         if (!mapRef.current) {
             return  
         }
@@ -106,10 +102,11 @@ export default function Map(props) {
         mapRef.current.addInteraction(drawData);  
         mapRef.current.addInteraction(snap);
 
-        drawData.on("drawend", (event) => {
-            console.log(event.feature);
-            
-            saveShape(event.feature);
+        drawData.on("drawend", (event) => { 
+            const feature = event.feature;
+            const newShapesList = shapes;  
+            newShapesList.push(feature);        
+            saveShape(newShapesList);
             mapRef.current.removeInteraction(drawData);
         })
     }
@@ -123,7 +120,9 @@ export default function Map(props) {
 
         modify.on("modifyend", async (event) => {
             const feature = await event.features.getArray()[0];
-            saveShape(feature);
+            const filteredShapeList = shapes.filter(item => item.ol_uid !== feature.ol_uid);
+            filteredShapeList.push(feature);
+            saveShape(filteredShapeList);
         });
 
         select.on('select', (event) => {
@@ -140,6 +139,8 @@ export default function Map(props) {
         if (selectedShape) {
             vectorSource.removeFeature(selectedShape);
             setSelectedShape(null)
+            const features = vectorSource.getFeatures()
+            saveShape(features);
         }
     }
 
