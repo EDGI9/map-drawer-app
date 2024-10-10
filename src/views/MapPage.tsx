@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import GeoTIFF from 'ol/source/GeoTIFF';
 import GeoJSON from 'ol/format/GeoJSON';
@@ -12,7 +12,7 @@ import { MapDTO } from '../domains/maps/core/dtos/map.dto';
 
 function MapPage() {
     let [shapes, setShapes] = useState<ShapeDTO[]>([]);
-    let [map, setMap] = useState({});
+    let [map, setMap] = useState<MapDTO | {}>({});
 
     async function getShapes() {
         const shapesData = await ShapesService.getById(MapList[0].id);
@@ -22,6 +22,7 @@ function MapPage() {
         };
 
         const transformedShapesData = shapesData.map(item => new GeoJSON().readFeature(item));
+        //@ts-ignore
         setShapes(transformedShapesData);
     }
 
@@ -43,8 +44,10 @@ function MapPage() {
         setMap(source)
     }
 
-    function updateShapes(featureList:type) {
+    function updateShapes(featureList: Object[]) {
+        //@ts-ignore
         const featureGeoJSON = featureList.map(item => new GeoJSON().writeFeature(item))
+        //@ts-ignore
         ShapesService.update(MapList[0].id, featureGeoJSON) 
     }
 
@@ -57,6 +60,7 @@ function MapPage() {
         <div className='l-main-page'>
             <h1 className='l-main-page_title'>Map area</h1>
             <div className='l-main-page_main'>
+                {/* @ts-ignore */}
                 <MapComponent shapes={shapes} mapSource={map} onUpdate={updateShapes}/>
             </div>
         </div>

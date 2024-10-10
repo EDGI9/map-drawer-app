@@ -1,20 +1,22 @@
 import { describe, it, expect, afterAll, vi, beforeEach } from "vitest";
 import { render, cleanup, RenderResult } from '@testing-library/react';
-import React from "react";
+import GeoJSON from 'ol/format/GeoJSON';
+import GeoTIFF from 'ol/source/GeoTIFF';
 
 import MapComponent from "../Map.js";
 
-import {MapList} from "../../domains/maps/__mocks__/maps.js"
+import { MapList } from "../../domains/maps/__mocks__/maps.js"
 import { ShapeList } from "../../domains/shapes/__mocks__/shapes.js"
-import { ShapeDTO } from "../../domains/shapes/core/dtos/shape.dto.js";
+import { TransformedShapeDTO } from "../../domains/shapes/core/dtos/shape.dto.js";
+import { MapInterface } from "../../interfaces/components.js";
 
 describe('Map component', () => {
-    let map = MapList;
-    let shapes: ShapeDTO = ShapeList;
+    let map = new GeoTIFF({sources: [{url: MapList[0].src}]});
+    let shapes: TransformedShapeDTO = ShapeList.map(item => new GeoJSON().readFeature(item));
     let component: RenderResult;
     let mapElement: HTMLElement;
-    const props = {
-        source: map,
+    const props: MapInterface = {
+        mapSource: map,
         shapes: shapes,
         onUpdate: vi.fn()
     }

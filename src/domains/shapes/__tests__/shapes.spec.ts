@@ -32,7 +32,7 @@ describe('Shapes service', () => {
 
         const mapId = MapList[0].id;
         const spy = vi.spyOn(ShapesService, "update");
-
+        //@ts-ignore
         await ShapesService.update(mapId, ShapeList);
         
         expect(spy).toHaveBeenCalledOnce();
