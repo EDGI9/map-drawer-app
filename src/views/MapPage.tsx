@@ -1,36 +1,67 @@
-import { useEffect, useState } from "react";
-import MapService from "../domains/maps/index";
-import { MapList } from "../domains/maps/__mocks__/maps";
-import ShapesService from "../domains/shapes";
+import { useEffect, useState } from 'react'
 
+import GeoTIFF from 'ol/source/GeoTIFF';
+import GeoJSON from 'ol/format/GeoJSON';
+
+import MapComponent from "../components/Map";
+import MapService from "../domains/maps/index";
+import ShapesService from "../domains/shapes";
+import { MapList } from "../domains/maps/__mocks__/maps";
+import { ShapeDTO } from '../domains/shapes/core/dtos/shape.dto';
+import { MapDTO } from '../domains/maps/core/dtos/map.dto';
 
 function MapPage() {
-    
-    async function getMap() {
-        const map = await MapService.getById(MapList[0].id);
+    let [shapes, setShapes] = useState<ShapeDTO[]>([]);
+    let [map, setMap] = useState<MapDTO | {}>({});
 
-        if (!map) {
-            console.log('Map not found');
-            return  
+    async function getShapes() {
+        const shapesData = await ShapesService.getById(MapList[0].id);
+        if (!shapesData) {
+            console.log('No Shape data found');
+            return
+        };
+
+        const transformedShapesData = shapesData.map(item => new GeoJSON().readFeature(item));
+        //@ts-ignore
+        setShapes(transformedShapesData);
+    }
+
+    async function getGeoTiff() {
+        const mapData: MapDTO | null = await MapService.getById(MapList[0].id) ;
+        if (!mapData) {
+            console.log('No Map data');
+            return
         }
-        
-        const shapes = await ShapesService.getById(map.id)
-        console.log(map, shapes);
+
+        const source = new GeoTIFF({
+            sources: [
+                {
+                    url: mapData.src,
+                },
+            ],
+        });
+
+        setMap(source)
+    }
+
+    function updateShapes(featureList: Object[]) {
+        //@ts-ignore
+        const featureGeoJSON = featureList.map(item => new GeoJSON().writeFeature(item))
+        //@ts-ignore
+        ShapesService.update(MapList[0].id, featureGeoJSON) 
     }
 
     useEffect(() => {
-        getMap()
-    }, [])
+        getGeoTiff();
+        getShapes();
+    }, []);
 
     return(
-        <div>
-            <h1>Map area</h1>
-            <div>
-                <button>Add Rect</button>
-                <button>Add Polygon</button>
-            </div>
-            <div>
-                {/* map location */}
+        <div className='l-main-page'>
+            <h1 className='l-main-page_title'>Map area</h1>
+            <div className='l-main-page_main'>
+                {/* @ts-ignore */}
+                <MapComponent shapes={shapes} mapSource={map} onUpdate={updateShapes}/>
             </div>
         </div>
     )

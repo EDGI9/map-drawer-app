@@ -1,0 +1,15 @@
+.c-button {
+    background: linear-gradient(90deg, rgb(79, 70, 255) 0%, rgb(104, 104, 252) 35%, rgb(141, 148, 248) 100%);
+    padding: .5em .7em;
+    border-radius: .5em;
+    border: none;
+    box-shadow: 0px 3px 4px 0px rgba(0,0,0,0.37);
+    font-weight: 600;
+    color: white;
+
+    &:hover {
+        cursor: pointer;
+        transform: scale(1.05);
+        transition: transform 0.3s;
+    }
+}

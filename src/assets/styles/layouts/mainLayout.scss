@@ -1,0 +1,17 @@
+.l-main-page {
+    display: grid;
+    grid-template-columns: auto minmax(200px, 900px) auto;
+    grid-template-rows: auto auto;
+    grid-template-areas: 
+    ". title ."
+    ". main .";
+    
+    .l-main-page_title {
+      grid-area: title;
+    }
+    
+    .l-main-page_main {
+      grid-area: main;
+    }
+}
+  
