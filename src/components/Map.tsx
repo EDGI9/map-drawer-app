@@ -12,14 +12,23 @@ import 'ol/ol.css';
 import Button from "../components/Button";
 
 export default function Map(props) {
-    let [vectorSource, setVectorSource] = useState();
-    let [selectedShape, setSelectedShape] = useState(null);
-    let [shapes, setShapes] = useState([]);
-    let mapRef = useRef({});
+    let [vectorSource, setVectorSource] = useState<VectorSource>();
+    let [selectedShape, setSelectedShape] = useState<Object>({});
+    let [shapes, setShapes] = useState<Object[]>([]);
+    let mapRef = useRef<olMap>({});
     const shapesTypes = {
         SQUARE: 'Circle', //Circle is the value to set for square in OpenLibrary
         POLYGON: 'Polygon'
     };
+    const shapeStyle = new Style({
+        stroke: new Stroke({
+            color: 'blue',
+            width: 2,
+        }),
+        fill: new Fill({
+            color: 'rgba(0, 0, 255, 0.1)',
+        }),
+    });
 
     async function loadMap() {
         if (!props.mapSource || !Object.entries(props.mapSource).length) {
@@ -55,15 +64,7 @@ export default function Map(props) {
 
     function loadShapes() {
         const shapeFeatures = props.shapes.map((item) => {
-            const rectangleStyle = new Style({
-                stroke: new Stroke({
-                    color: 'blue',
-                    width: 2,
-                }),
-                fill: new Fill({
-                    color: 'rgba(0, 0, 255, 0.1)',
-                }),
-            });
+            const rectangleStyle = shapeStyle;
         
             item.setStyle(rectangleStyle)
             return item
@@ -98,7 +99,8 @@ export default function Map(props) {
 
         let drawOptions= {
             source: vectorSource,
-            type: type
+            type: type,
+            style: shapeStyle,
         };
 
         switch (type) {
@@ -116,7 +118,8 @@ export default function Map(props) {
 
         drawData.on("drawend", (event) => { 
             const feature = event.feature;
-            const newShapesList = shapes;  
+            const newShapesList = shapes; 
+            feature.setStyle(shapeStyle) 
             newShapesList.push(feature);        
             saveShape(newShapesList);
             mapRef.current.removeInteraction(drawData);
