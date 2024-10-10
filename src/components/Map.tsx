@@ -9,6 +9,8 @@ import { Vector as VectorLayer} from 'ol/layer.js';
 import {Style, Stroke, Fill} from 'ol/style';
 import 'ol/ol.css';
 
+import Button from "../components/Button";
+
 export default function Map(props) {
     let [vectorSource, setVectorSource] = useState();
     let [selectedShape, setSelectedShape] = useState(null);
@@ -37,6 +39,16 @@ export default function Map(props) {
             view: props.mapSource.getView(),
         });
 
+        mapObject.on('pointermove', function (evt) {
+            mapObject.getTargetElement().style.cursor = '';
+          
+            mapObject.forEachFeatureAtPixel(evt.pixel, function (feature) {
+              if (feature) {
+                mapObject.getTargetElement().style.cursor = 'pointer';
+              }
+            });
+        });
+
         mapRef.current = mapObject;
         loadShapes();
     }
@@ -49,7 +61,7 @@ export default function Map(props) {
                     width: 2,
                 }),
                 fill: new Fill({
-                color: 'rgba(0, 0, 255, 0.1)',
+                    color: 'rgba(0, 0, 255, 0.1)',
                 }),
             });
         
@@ -156,13 +168,13 @@ export default function Map(props) {
     }, [vectorSource]);
 
     return (
-        <>
-            <div>
-                <button onClick={() => addShape(shapesTypes.SQUARE)}>Add rectangle</button>
-                <button onClick={() => addShape(shapesTypes.POLYGON)}>Add Polygon</button>
-                <button onClick={() => removeShape()}>Delete selected shape</button>
+        <div data-testid="qa-map_container" className='c-map'>
+            <div className='c-map_actions'>
+                <Button text="Add rectangle"  onClick={() =>addShape(shapesTypes.SQUARE)}/>
+                <Button text="Add Polygon"  onClick={() =>addShape(shapesTypes.POLYGON)}/>
+                <Button text="Delete selected shape"  onClick={() =>removeShape()}/>
             </div>
-            <div ref={mapRef} id="map" className='c-drawing-container' style={{ width: '100%', height: '700px' }}></div>   
-        </>
+            <div data-testid="qa-map" ref={mapRef} id="map" className='c-map_map' style={{ width: '100%', height: '700px' }}></div>   
+        </div>
     )
 }
