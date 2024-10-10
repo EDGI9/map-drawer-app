@@ -54,9 +54,11 @@ function MapPage() {
     }, []);
 
     return(
-        <div>
-            <h1>Map area</h1>
-            <MapComponent shapes={shapes} mapSource={map} onUpdate={updateShapes}/>
+        <div className='l-main-page'>
+            <h1 className='l-main-page_title'>Map area</h1>
+            <div className='l-main-page_main'>
+                <MapComponent shapes={shapes} mapSource={map} onUpdate={updateShapes}/>
+            </div>
         </div>
     )
 };
